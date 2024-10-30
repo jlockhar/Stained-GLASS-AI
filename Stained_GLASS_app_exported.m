@@ -1388,7 +1388,7 @@ function addafterlastemptycell(app,file_name,file_path,name_column_index,path_co
                 definedCellAnnotationVariables(end+1) = {app.StainIntensityDropDown.Value};
             end
 
-            cellAnnotations = readtable(app.CELL_ANNOTATION_FULLFILE_PATH,VariableNamingRule="preserve");
+            cellAnnotations = readtable(app.CELL_ANNOTATION_FULLFILE_PATH,app.CELL_IMPORT_OPTS);
 
             % remove columns from table not used for variable definition
             trimVars = ~ismember(string(cellAnnotations.Properties.VariableNames),definedCellAnnotationVariables);
@@ -2321,6 +2321,13 @@ function addafterlastemptycell(app,file_name,file_path,name_column_index,path_co
             prompt_message = ['Select directory containing ' column_file_type(selected_column)];
             new_directory = uigetdir(app.LAST_SELECTED_DIR, prompt_message);
 
+            if isequal(new_directory, 0) % user canceled selection
+                return
+            end
+
+            % remember this directory for next dialog
+            app.LAST_SELECTED_DIR = new_file_path;
+
             % change directory for selected cells
             for table_row = 1:size(selected_rows,1)
                 % skip empty cells
@@ -2343,10 +2350,22 @@ function addafterlastemptycell(app,file_name,file_path,name_column_index,path_co
             selected_column = unique(app.UITable.Selection(:,2));
             selected_rows = app.UITable.Selection(:,1);
 
+            % do nothing if no cells are selected
+            if isempty(app.UITable.Selection)
+                return
+            end
+
             %prompt user to select containing directory
             column_file_type = ['Cell annotations', 'GLASS-AI classifications','Tumor label masks'];
             prompt_message = ['Select directory containing ' column_file_type(selected_column)];
             new_directory = uigetdir(app.LAST_SELECTED_DIR, prompt_message);
+
+            if isequal(new_directory, 0) % user canceled selection
+                return
+            end
+
+            % remember this directory for next dialog
+            app.LAST_SELECTED_DIR = new_file_path;
 
             for table_row = 1:size(selected_rows,1)
                 % get names by stripping file extensions
